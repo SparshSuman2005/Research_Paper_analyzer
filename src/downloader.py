@@ -1,50 +1,29 @@
 import arxiv
-import os 
-from pathlib import Path 
+import os
 
+def downlaod_paper(query):
 
-
-
-
-def downloadpapers(result):
-
-    papers_folder= Path(__file__).parent.parent/"papers"
-    papers_folder.mkdir(exist_ok=True)
-
-
-    for papers in result:
-        paper_id = papers.get_short_id()
-        file_path = papers_folder/f"{paper_id}.pdf"
-
-
-        if(file_path.exists()):
-            print("Already Downloaded")
-            continue
-
-        print("downloading paper")
-
-        papers.download_pdf(
-            dirpath=papers_folder,
-            filename = f"{paper_id}.pdf"
-        )
-        print("paper downloaded")
-
-
-def search_paper():
-
-    name = input("Enter the name of the paper : ")
-
-
-    search = arxiv.Search(query=name , max_results=3)
     client = arxiv.Client()
-    result = list(client.results(search))
+    search = arxiv.Search(query=query)
 
-    return result
 
-result = search_paper()
-downloadpapers(result)
+    result = client.results(search)
+    if(result==null):
+        print("No such paper exits ")
+        return 0 
 
+    if not os.path.exists(f"../papers/{query}.pdf"):
+     paper.download_pdf(
+        dirpath="../papers",
+        filename=f"{query}.pdf"
+    )
+    else:
+     print("Paper already there")
+
+    
+
+
+    
+       
         
-
-
 
