@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 from reader import read_text
 from chunker import chunk_text
-import os,time
 from sentence_transformers import SentenceTransformer
 
 load_dotenv("../.env")
@@ -19,8 +18,8 @@ def embed_chunk():
         show_progress_bar=True
     )
 
-    print(len(vectors))
-    print(len(vectors[0]))
+    return chunks,vectors.tolist()
 
 
-embed_chunk()
+
+
