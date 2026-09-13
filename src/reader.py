@@ -1,21 +1,34 @@
 import pypdf
+import io
+from dotenv import load_dotenv
+from supabase import create_client
 import os
 
-def read_text():
 
-    text = ""
-    folder_path="../papers"
+load_dotenv()
 
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
 
-    for file in os.listdir(folder_path):
-        if file.endswith(".pdf"):
-            file_path = os.path.join(folder_path , file)
-            
-            for page in (pypdf.PdfReader(file_path)).pages:
+supabase = create_client(url, key)
+text = ""
 
-                page_text=page.extract_text()
+def read_text(file):
 
-                if page_text:
-                    text+=page_text
+    
+    pdf_bytes = (
+            supabase.
+            storage
+            .from_("research_paper")
+            .download(file["name"])
+        )
+    
+    pdf_file=io.BytesIO(pdf_bytes)
+    reader=pypdf.PdfReader(pdf_file)
+    
+    for page in reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            text+=page_text
 
     return text        

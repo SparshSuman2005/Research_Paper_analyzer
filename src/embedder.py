@@ -2,21 +2,37 @@ from dotenv import load_dotenv
 from reader import read_text
 from chunker import chunk_text
 from sentence_transformers import SentenceTransformer
+from supabase import create_client
+import os
+load_dotenv()
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
+
+supabase = create_client(url, key)
+
 
 load_dotenv("../.env")
 
 def embed_chunk():
+    files = (
+        supabase
+        .storage
+        .from_("research_paper")
+        .list()
 
-    chunks = chunk_text(read_text())
-
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    
-
-    vectors=model.encode(
-        chunks,
-        batch_size=32,
-        show_progress_bar=True
     )
+    for file in files:
+
+        chunks = chunk_text(read_text(file))
+
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        
+
+        vectors=model.encode(
+            chunks,
+            batch_size=32,
+            show_progress_bar=True
+        )
 
     return chunks,vectors.tolist()
 
