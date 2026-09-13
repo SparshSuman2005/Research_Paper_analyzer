@@ -1,16 +1,7 @@
 import arxiv
 import os
 import requests
-from supabase import create_client
-from dotenv import load_dotenv
-import re
-
-load_dotenv()
-
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_KEY")
-
-supabase = create_client(url, key)
+from supabase_client import supabase
 
 files = (
     supabase

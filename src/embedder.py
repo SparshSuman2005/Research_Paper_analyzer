@@ -2,16 +2,7 @@ from dotenv import load_dotenv
 from reader import read_text
 from chunker import chunk_text
 from sentence_transformers import SentenceTransformer
-from supabase import create_client
-import os
-load_dotenv()
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_KEY")
-
-supabase = create_client(url, key)
-
-
-load_dotenv("../.env")
+from supabase_client import supabase
 
 def embed_chunk():
     files = (
