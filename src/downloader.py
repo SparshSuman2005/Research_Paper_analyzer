@@ -2,6 +2,8 @@ import arxiv
 import os
 import requests
 from supabase_client import supabase
+import re
+from embedder import embed_chunk
 
 files = (
     supabase
@@ -27,27 +29,27 @@ def downlaod_paper(query):
     client = arxiv.Client()
     search = arxiv.Search(query=query,
     max_results=3)
+    title=[]
 
 
     result = client.results(search)
     
     for paper in result:
 
-        title = get_paper_name(paper)
+        current_title = get_paper_name(paper)
         paper_exists=False
         for file in files:
-            if file["name"]==title:
+            if file["name"]==current_title:
                 paper_exists=True
                 break
 
         if paper_exists:
             continue
-        
+        title.append(current_title)
 
 
-        paper_id = paper.get_short_id()
         response = requests.get(paper.pdf_url,timeout=30)
-        if response.get_status()!=200:
+        if response.status_code!=200:
             print("no response from website ")  
             break
         application_type=response.headers.get(
@@ -61,29 +63,12 @@ def downlaod_paper(query):
 
         #upload to the bucket 
         supabase.storage.from_("research_paper").upload(
-            path=title,
+            path=current_title,
             file = response.content,
             file_options={
                 "content_type" : "application/pdf"
             }
         )
 
-
-
-
-
-            
-
-
-        
-
-    #     if not os.path.exists(f"../papers/{paper_id}.pdf"):
-
-    #         response = requests.get(paper.pdf_url)
-
-    #         with open(f"../papers/{paper_id}.pdf","wb")as file:
-    #             file.write(response.content)
-    #     else:
-    #         print("Paper already there")
-
-    # return
+    embed_chunk(title)
+    

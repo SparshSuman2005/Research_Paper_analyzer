@@ -2,11 +2,11 @@ import pypdf
 import io
 from dotenv import load_dotenv
 from supabase_client import supabase
-text = ""
+
 
 def read_text(file):
 
-    
+    text = ""
     pdf_bytes = (
             supabase.
             storage
