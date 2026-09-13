@@ -27,5 +27,11 @@ def embed_chunk(name):
     return 
 
 
+def embed_question(question):
+    embedding = model.encode(question)
+    return embedding.tolist()
+
+
+
 
 

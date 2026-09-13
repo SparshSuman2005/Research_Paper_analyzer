@@ -26,7 +26,11 @@ def get_paper_name(paper):
 
 def downlaod_paper(query):
 
-    client = arxiv.Client()
+    client = arxiv.Client(
+    page_size=3,
+    delay_seconds=5,
+    num_retries=5
+    )
     search = arxiv.Search(query=query,
     max_results=3)
     title=[]
@@ -45,7 +49,7 @@ def downlaod_paper(query):
 
         if paper_exists:
             continue
-        title.append(current_title)
+        
 
 
         response = requests.get(paper.pdf_url,timeout=30)
@@ -69,6 +73,7 @@ def downlaod_paper(query):
                 "content_type" : "application/pdf"
             }
         )
+        title.append(current_title)
 
     embed_chunk(title)
     
