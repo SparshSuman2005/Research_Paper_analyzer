@@ -8,7 +8,7 @@ from embedder import embed_chunk
 files = (
     supabase
     .storage
-    .from_("research_paper")
+    .from_("Reasearch_paper")
     .list()
     )
 
@@ -66,7 +66,7 @@ def downlaod_paper(query):
         
 
         #upload to the bucket 
-        supabase.storage.from_("research_paper").upload(
+        supabase.storage.from_("Reasearch_paper").upload(
             path=current_title,
             file = response.content,
             file_options={

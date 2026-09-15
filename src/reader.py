@@ -10,7 +10,7 @@ def read_text(file):
     pdf_bytes = (
             supabase.
             storage
-            .from_("research_paper")
+            .from_("Reasearch_paper")
             .download(file["name"])
         )
     
