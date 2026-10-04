@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PaperMind AI — arXiv Research Paper RAG Analyzer</title>
+  <meta name="description" content="AI-powered scientific research paper analyzer and question answering system using pgvector vector search and Google Gemini." />
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="dark-theme">
+  <!-- Background Ambient Glow Gradients -->
+  <div class="ambient-glow glow-1" aria-hidden="true"></div>
+  <div class="ambient-glow glow-2" aria-hidden="true"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="header-branding">
+      <div class="logo-mark" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          <circle cx="12" cy="9" r="2.5"></circle>
+          <path d="m14 14 3 3"></path>
+        </svg>
+      </div>
+      <div class="branding-text">
+        <div class="brand-row">
+          <h1 class="brand-title">PaperMind <span class="brand-badge">RAG AI</span></h1>
+        </div>
+        <p class="brand-subtitle">arXiv Research Paper Explorer & Vector Q&A Engine</p>
+      </div>
+    </div>
+
+    <!-- Live System Telemetry Status -->
+    <div class="header-status-group">
+      <div class="status-pill" id="status-supabase" title="Supabase pgvector Database">
+        <span class="status-dot"></span>
+        <span class="status-label">pgvector</span>
+      </div>
+      <div class="status-pill" id="status-gemini" title="Google Gemini Generation Model">
+        <span class="status-dot"></span>
+        <span class="status-label">Gemini</span>
+      </div>
+      <div class="stats-badge" id="stats-papers-badge" title="Indexed Knowledge Base">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <span id="header-papers-count">0 papers</span>
+        <span class="badge-separator">/</span>
+        <span id="header-chunks-count">0 chunks</span>
+      </div>
+      <button id="btn-refresh-status" class="icon-btn" title="Refresh library & status" aria-label="Refresh library">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Workspace Grid -->
+  <main class="workspace-layout">
+    
+    <!-- LEFT PANEL: arXiv Exploration & Library -->
+    <section class="panel panel-left" aria-label="Paper Hub">
+      <div class="tabs-nav" role="tablist">
+        <button id="tab-btn-search" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-pane-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          arXiv Discovery
+        </button>
+        <button id="tab-btn-library" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-pane-library">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          Paper Library
+          <span id="tab-library-badge" class="count-pill">0</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: Search arXiv -->
+      <div id="tab-pane-search" class="tab-pane active" role="tabpanel">
+        <form id="search-form" class="search-box">
+          <div class="input-with-icon">
+            <svg class="search-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input 
+              type="text" 
+              id="arxiv-search-input" 
+              class="text-input" 
+              placeholder="Search arXiv papers (e.g., Attention Is All You Need)..." 
+              autocomplete="off"
+              required 
+            />
+            <button type="submit" id="btn-search-arxiv" class="btn btn-primary btn-sm">
+              Search
+            </button>
+          </div>
+        </form>
+
+        <!-- Topic Suggestion Tags -->
+        <div class="topic-chips" aria-label="Suggested Topics">
+          <span class="chips-label">Popular:</span>
+          <button type="button" class="topic-chip" data-query="Attention Is All You Need">Transformers</button>
+          <button type="button" class="topic-chip" data-query="Diffusion models generative AI">Diffusion</button>
+          <button type="button" class="topic-chip" data-query="Retrieval augmented generation LLM">RAG</button>
+          <button type="button" class="topic-chip" data-query="Chain of thought reasoning">Reasoning</button>
+        </div>
+
+        <!-- Search Results List -->
+        <div id="search-results-container" class="cards-scroll-container">
+          <div class="empty-state" id="search-empty-state">
+            <div class="empty-icon">🔬</div>
+            <p class="empty-title">Discover and Index Academic Papers</p>
+            <p class="empty-desc">Search arXiv for any topic or author. Click <strong>"Ingest & Analyze"</strong> to extract, chunk, and vectorize the PDF for AI Q&A.</p>
+          </div>
+          <div id="search-results-list" class="cards-list"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Paper Library -->
+      <div id="tab-pane-library" class="tab-pane" role="tabpanel" hidden>
+        <div class="library-toolbar">
+          <input 
+            type="text" 
+            id="library-filter-input" 
+            class="text-input text-input-sm" 
+            placeholder="Filter indexed papers..." 
+          />
+        </div>
+        <div id="library-results-container" class="cards-scroll-container">
+          <div class="empty-state" id="library-empty-state" hidden>
+            <div class="empty-icon">📚</div>
+            <p class="empty-title">No Papers Indexed Yet</p>
+            <p class="empty-desc">Switch to the arXiv Discovery tab to search and index your first academic paper.</p>
+          </div>
+          <div id="library-cards-list" class="cards-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Interactive Research Assistant Chat -->
+    <section class="panel panel-right" aria-label="Research Assistant Q&A">
+      
+      <!-- Context & Scope Selector Bar -->
+      <div class="chat-header-bar">
+        <div class="scope-selector-wrapper">
+          <label for="paper-scope-select" class="scope-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            Scope:
+          </label>
+          <select id="paper-scope-select" class="select-dropdown">
+            <option value="">🌐 All Indexed Papers (Cross-Paper Synthesis)</option>
+          </select>
+        </div>
+
+        <div class="chat-header-actions">
+          <button id="btn-clear-chat" class="btn btn-ghost btn-sm" title="Clear conversation history">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Clear Chat
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Feed Display Area -->
+      <div id="chat-messages-container" class="chat-messages">
+        <!-- Hero Welcome Card when no messages -->
+        <div id="chat-welcome-card" class="welcome-card">
+          <div class="welcome-badge">✦ Grounded RAG Assistant</div>
+          <h2 class="welcome-title">Ask Deep Questions Across Your Papers</h2>
+          <p class="welcome-text">
+            Queries are matched against dense embeddings in Supabase using cosine similarity. Answers are synthesized by Gemini strictly based on the extracted paper chunks.
+          </p>
+          
+          <div class="prompt-suggestions">
+            <p class="suggestions-header">Quick Starter Queries:</p>
+            <div class="suggestions-grid">
+              <button type="button" class="suggestion-card" data-prompt="What is the main contribution and hypothesis of the indexed papers?">
+                <span class="suggestion-icon">💡</span>
+                <span class="suggestion-text">What is the main contribution and hypothesis?</span>
+              </button>
+              <button type="button" class="suggestion-card" data-prompt="Explain the detailed methodology, architecture, and training approach used.">
+                <span class="suggestion-icon">🔬</span>
+                <span class="suggestion-text">Explain the methodology and architecture used.</span>
+              </button>
+              <button type="button" class="suggestion-card" data-prompt="What datasets and benchmark results are reported in the experiments?">
+                <span class="suggestion-icon">📊</span>
+                <span class="suggestion-text">What benchmark results and metrics are reported?</span>
+              </button>
+              <button type="button" class="suggestion-card" data-prompt="What are the key limitations, assumptions, or future work discussed?">
+                <span class="suggestion-icon">⚠️</span>
+                <span class="suggestion-text">What are the key limitations and future directions?</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat message items will be dynamically appended here -->
+      </div>
+
+      <!-- Chat Input Toolbar & Form -->
+      <footer class="chat-input-wrapper">
+        <form id="chat-form" class="chat-input-form">
+          <div class="chat-textarea-container">
+            <textarea 
+              id="chat-textarea" 
+              class="chat-textarea" 
+              placeholder="Ask a question about the papers (e.g., How does the proposed method compare with baselines?)..." 
+              rows="1"
+              required
+            ></textarea>
+            
+            <div class="chat-actions-bar">
+              <div class="input-hint">
+                <kbd>Enter</kbd> to submit &bull; <kbd>Shift + Enter</kbd> for newline
+              </div>
+              <button type="submit" id="btn-send-query" class="btn btn-primary btn-send">
+                <span>Send</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </form>
+      </footer>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
